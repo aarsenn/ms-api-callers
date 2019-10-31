@@ -13,7 +13,7 @@ const callBotframework = (opts, app, config) => {
   return Promise.resolve('Bot ok')
 };
 
-export default async function initApiCallers(appId, storage) {
+async function initApiCallers(appId, storage) {
   try {
     const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
     this.log.warn('CONFIG', { config });
@@ -30,4 +30,6 @@ export default async function initApiCallers(appId, storage) {
   } catch (error) {
     throw error;
   }
-}; 
+};
+
+exports.initApiCallers = initApiCallers;
