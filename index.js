@@ -27,7 +27,8 @@ const callGraph = (opts, app, config) => {
       };
       const httpOpts = Object.assign(opts, graphOpts);
       return axios(httpOpts);
-    });
+    })
+    .then(resp => resp.data.value);
 };
 
 const callBotframework = (opts, app, config) => {
@@ -40,7 +41,8 @@ const callBotframework = (opts, app, config) => {
       };
       const httpOpts = Object.assign(opts, graphOpts);
       return axios(httpOpts);
-    });
+    })
+    .then(resp => resp.data);
 };
 
 async function initApiCallers(appId, storage) {
