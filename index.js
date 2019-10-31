@@ -4,7 +4,7 @@ const axios = require('axios');
 const CONFIG_TABLE = '__ms_teams_auth_config__';
 const CONFIG_KEY = '__config';
 
-function checkTokens(app) {
+const checkTokens = app => {
   if (!app) return Promise.reject(new Error('No app providet in check tokens'));
   if (app.tokensExpired >= Date.now()) return Promise.resolve(app);
   return axios({
@@ -22,10 +22,10 @@ const callGraph = (opts, app, config) => {
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.graphToken}` };
       const graphOpts = {
-        headers: _.assign(headers, opts.headers || {}),
+        headers: Object.assign(headers, opts.headers || {}),
         url: config.graphApiEndpoint + opts.url,
       };
-      const httpOpts = _.assign(opts, graphOpts);
+      const httpOpts = Object.assign(opts, graphOpts);
       return axios(httpOpts);
     });
 };
@@ -35,10 +35,10 @@ const callBotframework = (opts, app, config) => {
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.botToken}` };
       const graphOpts = {
-        headers: _.assign(headers, opts.headers || {}),
+        headers: Object.assign(headers, opts.headers || {}),
         url: (app.botServiceUrl || config.botDefaultApiEndpoint) + opts.url,
       };
-      const httpOpts = _.assign(opts, graphOpts);
+      const httpOpts = Object.assign(opts, graphOpts);
       return axios(httpOpts);
     });
 };
