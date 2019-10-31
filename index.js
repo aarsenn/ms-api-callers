@@ -1,16 +1,46 @@
+const axios = require('axios');
+// const qs = require('qs');
+
 const CONFIG_TABLE = '__ms_teams_auth_config__';
 const CONFIG_KEY = '__config';
 
-const httpCall = () => {
-
-};
+function checkTokens(app) {
+  if (!app) return Promise.reject(new Error('No app providet in check tokens'));
+  if (app.tokensExpired >= Date.now()) return Promise.resolve(app);
+  return axios({
+    url: app.adapterUrl,
+    method: 'post',
+    data: { app } 
+  }).then(resp => {
+    if (!resp.data) return null;
+    return resp.data;
+  });
+}
 
 const callGraph = (opts, app, config) => {
-  return Promise.resolve('Graph ok')
+  return checkTokens(app)
+    .then(app => {
+      const headers = { 'Authorization': `Bearer ${app.graphToken}` };
+      const graphOpts = {
+        headers: _.assign(headers, opts.headers || {}),
+        url: config.graphApiEndpoint + opts.url,
+      };
+      const httpOpts = _.assign(opts, graphOpts);
+      return axios(httpOpts);
+    });
 };
 
 const callBotframework = (opts, app, config) => {
-  return Promise.resolve('Bot ok')
+  return checkTokens(app)
+    .then(app => {
+      const headers = { 'Authorization': `Bearer ${app.botToken}` };
+      const graphOpts = {
+        headers: _.assign(headers, opts.headers || {}),
+        url: (app.botServiceUrl || config.botDefaultApiEndpoint) + opts.url,
+      };
+      const httpOpts = _.assign(opts, graphOpts);
+      return axios(httpOpts);
+    });
 };
 
 async function initApiCallers(appId, storage) {
