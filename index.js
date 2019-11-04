@@ -48,16 +48,17 @@ const callBotframework = (opts, app, config) => {
 async function initApiCallers(appId, storage) {
   try {
     const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
-    this.log.warn('CONFIG', { config });
     if (!config) throw new Error(`Can't get config on API callers init`);
 
     const app = await storage.get(config.tableName, appId);
-    this.log.warn('APP', { app });
     if (!app) throw new Error(`Can't get app on API callers init`);
 
+    const isFunc = f => typeof f === 'function';
+
     return {
-      callGraph: opts => callGraph(opts, app, config),
-      callBotframework: opts => callBotframework(opts, app, config)
+      callGraph: opts => callGraph(isFunc(opts) ? opts(app) : opts, app, config),
+      callBotframework: opts => callBotframework(isFunc(opts) ? opts(app) : opts, app, config),
+      app
     }
   } catch (error) {
     throw error;
