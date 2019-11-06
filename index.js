@@ -28,7 +28,7 @@ const callGraph = (opts, app, config) => {
       const httpOpts = Object.assign(opts, graphOpts);
       return axios(httpOpts);
     })
-    .then(resp => resp.data.value);
+    .then(resp => resp.data.value || resp.data);
 };
 
 const callBotframework = (opts, app, config) => {
