@@ -31,7 +31,7 @@ const callGraph = (opts, app, config, context) => {
     })
     .then(resp => resp.data.value || resp.data)
     .catch(err => {
-      context.log.error('Error on http request', { response: err.response });
+      context.log.error('Error on http request', { response: err.response.data, status: err.response.status });
       throw err;
     });
 };
@@ -50,7 +50,7 @@ const callBotframework = (opts, app, config, context) => {
     })
     .then(resp => resp.data)
     .catch(err => {
-      context.log.error('Error on http request', { response: err.response });
+      context.log.error('Error on http request', { response: err.response.data, status: err.response.status });
       throw err;
     });
 };
