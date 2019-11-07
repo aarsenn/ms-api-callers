@@ -17,7 +17,7 @@ const checkTokens = app => {
   });
 }
 
-const callGraph = (opts, app, config) => {
+const callGraph = (opts, app, config, context) => {
   return checkTokens(app)
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.graphToken}` };
@@ -26,17 +26,17 @@ const callGraph = (opts, app, config) => {
         url: config.graphApiEndpoint + opts.url,
       };
       const httpOpts = Object.assign(opts, graphOpts);
-      this.log.info('MS Graph http request', { request: httpOpts });
+      context.log.info('MS Graph http request', { request: httpOpts });
       return axios(httpOpts);
     })
     .then(resp => resp.data.value || resp.data)
     .catch(err => {
-      this.log.error('Error on http request', { error: err.message });
+      context.log.error('Error on http request', { error: err.message });
       throw err;
     });
 };
 
-const callBotframework = (opts, app, config) => {
+const callBotframework = (opts, app, config, context) => {
   return checkTokens(app)
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.botToken}` };
@@ -45,12 +45,12 @@ const callBotframework = (opts, app, config) => {
         url: (app.botServiceUrl || config.botDefaultApiEndpoint) + opts.url,
       };
       const httpOpts = Object.assign(opts, graphOpts);
-      this.log.info('MS Botframework http request', { request: httpOpts });
+      context.log.info('MS Botframework http request', { request: httpOpts });
       return axios(httpOpts);
     })
     .then(resp => resp.data)
     .catch(err => {
-      this.log.error('Error on http request', { error: err.message });
+      context.log.error('Error on http request', { error: err.message });
       throw err;
     });
 };
@@ -66,8 +66,8 @@ async function initApiCallers(appId, storage) {
     const isFunc = f => typeof f === 'function';
 
     return {
-      callGraph: opts => callGraph(isFunc(opts) ? opts(app) : opts, app, config),
-      callBotframework: opts => callBotframework(isFunc(opts) ? opts(app) : opts, app, config),
+      callGraph: opts => callGraph(isFunc(opts) ? opts(app) : opts, app, config, this),
+      callBotframework: opts => callBotframework(isFunc(opts) ? opts(app) : opts, app, config, this),
       app
     }
   } catch (error) {
