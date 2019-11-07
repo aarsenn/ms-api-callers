@@ -26,9 +26,14 @@ const callGraph = (opts, app, config) => {
         url: config.graphApiEndpoint + opts.url,
       };
       const httpOpts = Object.assign(opts, graphOpts);
+      this.log.info('MS Graph http request', { request: httpOpts });
       return axios(httpOpts);
     })
-    .then(resp => resp.data.value || resp.data);
+    .then(resp => resp.data.value || resp.data)
+    .catch(err => {
+      this.log.error('Error on http request', { error: err.message });
+      throw err;
+    });
 };
 
 const callBotframework = (opts, app, config) => {
@@ -40,9 +45,14 @@ const callBotframework = (opts, app, config) => {
         url: (app.botServiceUrl || config.botDefaultApiEndpoint) + opts.url,
       };
       const httpOpts = Object.assign(opts, graphOpts);
+      this.log.info('MS Botframework http request', { request: httpOpts });
       return axios(httpOpts);
     })
-    .then(resp => resp.data);
+    .then(resp => resp.data)
+    .catch(err => {
+      this.log.error('Error on http request', { error: err.message });
+      throw err;
+    });
 };
 
 async function initApiCallers(appId, storage) {
