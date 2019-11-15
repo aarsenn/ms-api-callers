@@ -15,15 +15,20 @@ const checkTokens = app => {
     if (!resp.data) return null;
     return resp.data;
   });
-}
+};
+
+const replVers = (str, val) => {
+  return str.replace(/v\d\.\d/, val);
+};
 
 const callGraph = (opts, app, config, context) => {
+  const url = url => opts.version ? replVers(url, opts.version) : url;
   return checkTokens(app)
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.graphToken}` };
       const graphOpts = {
         headers: Object.assign(headers, opts.headers || {}),
-        url: config.graphApiEndpoint + opts.url,
+        url: url(config.graphApiEndpoint) + opts.url,
       };
       const httpOpts = Object.assign(opts, graphOpts);
       context.log.info('MS Graph http request', { request: httpOpts });
@@ -37,12 +42,13 @@ const callGraph = (opts, app, config, context) => {
 };
 
 const callBotframework = (opts, app, config, context) => {
+  const url = url => opts.version ? replVers(url, opts.version) : url;
   return checkTokens(app)
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.botToken}` };
       const graphOpts = {
         headers: Object.assign(headers, opts.headers || {}),
-        url: (app.botServiceUrl || config.botDefaultApiEndpoint) + opts.url,
+        url: url(app.botServiceUrl || config.botDefaultApiEndpoint) + opts.url,
       };
       const httpOpts = Object.assign(opts, graphOpts);
       context.log.info('MS Botframework http request', { request: httpOpts });
