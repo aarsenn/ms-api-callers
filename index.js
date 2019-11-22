@@ -14,7 +14,7 @@ const checkTokens = (app, config, context, storage) => {
   if (app.tokensExpired >= Date.now()) return Promise.resolve(app);
 
   const isCommonApp = !app.clientSecret;
-  const url = isCommonApp ? context.authProviderUrl : app.adapterUrl;
+  const url = isCommonApp ? `${context.authProviderUrl}?type=tokens` : app.adapterUrl;
 
   return axios({
     url,
