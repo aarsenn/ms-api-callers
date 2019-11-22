@@ -1,18 +1,29 @@
 const axios = require('axios');
-// const qs = require('qs');
 
 const CONFIG_TABLE = '__ms_teams_auth_config__';
 const CONFIG_KEY = '__config';
 
-const checkTokens = app => {
+const updateAppRecord = (app, data, config, storage) => {
+  const updated = Object.assign({}, app, data);
+  return storage.set(config.tableName, app.id, updated)
+    .then(() => updated);
+};
+
+const checkTokens = (app, config, context, storage) => {
   if (!app) return Promise.reject(new Error('No app providet in check tokens'));
   if (app.tokensExpired >= Date.now()) return Promise.resolve(app);
+
+  const isCommonApp = !app.clientSecret;
+  const url = isCommonApp ? context.authProviderUrl : app.adapterUrl;
+
   return axios({
-    url: app.adapterUrl,
+    url,
     method: 'post',
-    data: { app } 
+    data: { app },
+    headers: { 'Authorization': `FLOW ${context.config.flowToken}` }
   }).then(resp => {
     if (!resp.data) return null;
+    if (isCommonApp) return updateAppRecord(app, resp.data, config, storage);
     return resp.data;
   });
 };
@@ -21,9 +32,9 @@ const replVers = (str, val) => {
   return str.replace(/v\d\.\d/, val);
 };
 
-const callGraph = (opts, app, config, context) => {
+const callGraph = (opts, app, config, context, storage) => {
   const url = url => opts.version ? replVers(url, opts.version) : url;
-  return checkTokens(app)
+  return checkTokens(app, config, context, storage)
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.graphToken}` };
       const graphOpts = {
@@ -41,9 +52,9 @@ const callGraph = (opts, app, config, context) => {
     });
 };
 
-const callBotframework = (opts, app, config, context) => {
+const callBotframework = (opts, app, config, context, storage) => {
   const url = url => opts.version ? replVers(url, opts.version) : url;
-  return checkTokens(app)
+  return checkTokens(app, config, context, storage)
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.botToken}` };
       const graphOpts = {
@@ -72,8 +83,8 @@ async function initApiCallers(appId, storage) {
     const isFunc = f => typeof f === 'function';
 
     return {
-      callGraph: opts => callGraph(isFunc(opts) ? opts(app) : opts, app, config, this),
-      callBotframework: opts => callBotframework(isFunc(opts) ? opts(app) : opts, app, config, this),
+      callGraph: opts => callGraph(isFunc(opts) ? opts(app) : opts, app, config, this, storage),
+      callBotframework: opts => callBotframework(isFunc(opts) ? opts(app) : opts, app, config, this, storage),
       app
     }
   } catch (error) {
