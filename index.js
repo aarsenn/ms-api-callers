@@ -9,12 +9,12 @@ const updateAppRecord = (app, data, config, storage) => {
     .then(() => updated);
 };
 
-const checkTokens = (app, config, context, storage) => {
+const checkTokens = (app, config, context, storage, authAdapterUrl) => {
   if (!app) return Promise.reject(new Error('No app providet in check tokens'));
   if (app.tokensExpired >= Date.now()) return Promise.resolve(app);
 
   const isCommonApp = !app.clientSecret;
-  const url = isCommonApp ? `${context.authProviderUrl}?type=tokens` : app.adapterUrl;
+  const url = isCommonApp ? `${context.authProviderUrl}?type=tokens` : authAdapterUrl;
 
   return axios({
     url,
@@ -32,9 +32,9 @@ const replVers = (str, val) => {
   return str.replace(/v\d\.\d/, val);
 };
 
-const callGraph = (opts, app, config, context, storage) => {
+const callGraph = (opts, app, config, context, storage, authAdapterUrl) => {
   const url = url => opts.version ? replVers(url, opts.version) : url;
-  return checkTokens(app, config, context, storage)
+  return checkTokens(app, config, context, storage, authAdapterUrl)
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.graphToken}` };
       const graphOpts = {
@@ -52,9 +52,9 @@ const callGraph = (opts, app, config, context, storage) => {
     });
 };
 
-const callBotframework = (opts, app, config, context, storage) => {
+const callBotframework = (opts, app, config, context, storage, authAdapterUrl) => {
   const url = url => opts.version ? replVers(url, opts.version) : url;
-  return checkTokens(app, config, context, storage)
+  return checkTokens(app, config, context, storage, authAdapterUrl)
     .then(app => {
       const headers = { 'Authorization': `Bearer ${app.botToken}` };
       const graphOpts = {
@@ -72,7 +72,7 @@ const callBotframework = (opts, app, config, context, storage) => {
     });
 };
 
-async function initApiCallers(appId, storage) {
+async function initApiCallers(appId, storage, adaptersLinks) {
   try {
     const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
     if (!config) throw new Error(`Can't get config on API callers init`);
@@ -80,11 +80,14 @@ async function initApiCallers(appId, storage) {
     const app = await storage.get(config.tableName, appId);
     if (!app) throw new Error(`Can't get app on API callers init`);
 
+    const authAdapterUrl = adaptersLinks.find(adapter => adapter.label === config.authAdapterName);
+    if (!authAdapterUrl) throw new Error(`Can't get auth adapter url`);
+
     const isFunc = f => typeof f === 'function';
 
     return {
-      callGraph: opts => callGraph(isFunc(opts) ? opts(app) : opts, app, config, this, storage),
-      callBotframework: opts => callBotframework(isFunc(opts) ? opts(app) : opts, app, config, this, storage),
+      callGraph: opts => callGraph(isFunc(opts) ? opts(app) : opts, app, config, this, storage, authAdapterUrl),
+      callBotframework: opts => callBotframework(isFunc(opts) ? opts(app) : opts, app, config, this, storage, authAdapterUrl),
       app
     }
   } catch (error) {
