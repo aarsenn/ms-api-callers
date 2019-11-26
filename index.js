@@ -77,7 +77,9 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
         })
         .then(resp => resp.data.value || resp.data)
         .catch(err => {
-          context.log.error('Error on http request', { response: err.response.data, status: err.response.status });
+          const requestError = { response: err.response.data, status: err.response.status };
+          const error = { message: err.message || err };
+          context.log.error('Error on http request', err.response ? requestError : error);
           throw err;
         });
     };
@@ -97,7 +99,9 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
         })
         .then(resp => resp.data)
         .catch(err => {
-          context.log.error('Error on http request', { response: err.response.data, status: err.response.status });
+          const requestError = { response: err.response.data, status: err.response.status };
+          const error = { message: err.message || err };
+          context.log.error('Error on http request', err.response ? requestError : error);
           throw err;
         });
     };
