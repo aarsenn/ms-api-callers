@@ -11,7 +11,9 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
     let app = await storage.get(config.tableName, appId);
     if (!app) throw new Error(`Can't get app on API callers init`);
 
-    const authAdapterUrl = adaptersLinks.find(adapter => adapter.label === config.authAdapterName);
+    const authAdapter = adaptersLinks
+      .find(adapter => adapter.label === config.authAdapterName);
+    const authAdapterUrl = authAdapter && authAdapter.link;
     if (!authAdapterUrl) throw new Error(`Can't get auth adapter url`);
 
     const isFunc = f => typeof f === 'function';
