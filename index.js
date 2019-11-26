@@ -38,11 +38,7 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
         headers: { 'Authorization': `FLOW ${context.config.flowToken}` }
       };
 
-      context.log.warn('Update tokens start', { app, requestOptions });
-
       return axios(requestOptions).then(resp => {
-
-        context.log.warn('Update tokens response', { resp });
 
         if (!resp || !resp.data) return null;
 
@@ -50,13 +46,13 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
           .then(updatedApp => {
             app = updatedApp;
             appUpdatedCallback(updatedApp);
-            context.log.warn('Update tokens finish', { app });
+            context.log.info('Application tokens updated', { app });
             return updatedApp;
           });
         
         app = resp.data;
         appUpdatedCallback(app);
-        context.log.warn('Update tokens finish', { app });
+        context.log.info('Application tokens updated', { app });
         return resp.data;
       });
     };
