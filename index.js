@@ -26,17 +26,19 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
       if (!app) return Promise.reject(new Error('No app providet in check tokens'));
       if (app.tokensExpired >= Date.now()) return Promise.resolve(app);
 
-      context.log.warn('Update tokens start', { app });
-
       const isCommonApp = !app.clientSecret;
       const url = isCommonApp ? `${context.authProviderUrl}?type=tokens` : authAdapterUrl;
 
-      return axios({
+      const requestOptions = {
         url,
         method: 'post',
         data: { app },
         headers: { 'Authorization': `FLOW ${context.config.flowToken}` }
-      }).then(resp => {
+      };
+
+      context.log.warn('Update tokens start', { app, requestOptions });
+
+      return axios(requestOptions).then(resp => {
         if (!resp.data) return null;
 
         if (isCommonApp) return updateAppRecord(resp.data)
