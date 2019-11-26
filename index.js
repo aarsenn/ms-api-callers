@@ -41,7 +41,10 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
       context.log.warn('Update tokens start', { app, requestOptions });
 
       return axios(requestOptions).then(resp => {
-        if (!resp.data) return null;
+
+        context.log.warn('Update tokens response', { resp });
+
+        if (!resp || !resp.data) return null;
 
         if (isCommonApp) return updateAppRecord(resp.data)
           .then(updatedApp => {
@@ -77,9 +80,9 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
         })
         .then(resp => resp.data.value || resp.data)
         .catch(err => {
-          const requestError = { response: err.response.data, status: err.response.status };
-          const error = { message: err.message || err };
-          context.log.error('Error on http request', err.response ? requestError : error);
+          const requestError = () => ({ response: err.response.data, status: err.response.status });
+          const error = () => ({ message: err.message || err });
+          context.log.error('Error on http request', err.response ? requestError() : error());
           throw err;
         });
     };
@@ -99,9 +102,9 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
         })
         .then(resp => resp.data)
         .catch(err => {
-          const requestError = { response: err.response.data, status: err.response.status };
-          const error = { message: err.message || err };
-          context.log.error('Error on http request', err.response ? requestError : error);
+          const requestError = () => ({ response: err.response.data, status: err.response.status });
+          const error = () => ({ message: err.message || err });
+          context.log.error('Error on http request', err.response ? requestError() : error());
           throw err;
         });
     };
