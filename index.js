@@ -16,9 +16,9 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
     // const authAdapterUrl = authAdapter && authAdapter.link;
     // if (!authAdapterUrl) throw new Error(`Can't get auth adapter url`);
 
-    const authAdapterUrl = context.helpers.gatewayUrl('ms-teams-oauth-adapter', this.config.accountId);
+    const authAdapterUrl = context.helpers.gatewayUrl('ms-teams-oauth-adapter', context.config.accountId);
 
-    const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', this.config.accountId);
+    const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', context.config.accountId);
     // const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', this.helpers.providersAccountId);
 
     context.log.warn('Auth flows links', {
