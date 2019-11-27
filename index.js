@@ -26,7 +26,12 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
       authProviderUrl
     });
 
-    const isFunc = f => typeof f === 'function';
+    const isFunction = f => typeof f === 'function';
+
+    const emitAppUpdated = app => {
+      if (!isFunction(appUpdatedCallback)) return;
+      appUpdatedCallback(app);
+    };
 
     const updateAppRecord = data => {
       const updated = Object.assign({}, app, data);
@@ -55,13 +60,13 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
         if (isCommonApp) return updateAppRecord(resp.data)
           .then(updatedApp => {
             app = updatedApp;
-            appUpdatedCallback(updatedApp);
+            emitAppUpdated(updatedApp);
             context.log.info('Application tokens updated', { app });
             return updatedApp;
           });
         
         app = resp.data;
-        appUpdatedCallback(app);
+        emitAppUpdated(app);
         context.log.info('Application tokens updated', { app });
         return resp.data;
       });
@@ -116,8 +121,8 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
     };
 
     return {
-      callGraph: opts => callGraph(isFunc(opts) ? opts(app) : opts),
-      callBotframework: opts => callBotframework(isFunc(opts) ? opts(app) : opts),
+      callGraph: opts => callGraph(isFunction(opts) ? opts(app) : opts),
+      callBotframework: opts => callBotframework(isFunction(opts) ? opts(app) : opts),
       app
     }
   } catch (error) {
