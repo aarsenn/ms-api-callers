@@ -3,7 +3,7 @@ const axios = require('axios');
 const CONFIG_TABLE = '__ms_teams_auth_config__';
 const CONFIG_KEY = '__config';
 
-async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdatedCallback }) {
+async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
   try {
     const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
     if (!config) throw new Error(`Can't get config on API callers init`);
@@ -11,10 +11,20 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
     let app = await storage.get(config.tableName, appId);
     if (!app) throw new Error(`Can't get app on API callers init`);
 
-    const authAdapter = adaptersLinks
-      .find(adapter => adapter.label === config.authAdapterName);
-    const authAdapterUrl = authAdapter && authAdapter.link;
-    if (!authAdapterUrl) throw new Error(`Can't get auth adapter url`);
+    // const authAdapter = adaptersLinks
+    //   .find(adapter => adapter.label === config.authAdapterName);
+    // const authAdapterUrl = authAdapter && authAdapter.link;
+    // if (!authAdapterUrl) throw new Error(`Can't get auth adapter url`);
+
+    const authAdapterUrl = context.helpers.gatewayUrl('ms-teams-oauth-adapter', this.config.accountId);
+
+    const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', this.config.accountId);
+    // const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', this.helpers.providersAccountId);
+
+    context.log.warn('Auth flows links', {
+      authAdapterUrl,
+      authProviderUrl
+    });
 
     const isFunc = f => typeof f === 'function';
 
@@ -29,7 +39,7 @@ async function initApiCallers({ appId, storage, context, adaptersLinks, appUpdat
       if (app.tokensExpired >= Date.now()) return Promise.resolve(app);
 
       const isCommonApp = !app.clientSecret;
-      const url = isCommonApp ? `${context.authProviderUrl}?type=tokens` : authAdapterUrl;
+      const url = isCommonApp ? `${authProviderUrl}?type=tokens` : authAdapterUrl;
 
       const requestOptions = {
         url,
