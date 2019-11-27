@@ -11,20 +11,9 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
     let app = await storage.get(config.tableName, appId);
     if (!app) throw new Error(`Can't get app on API callers init`);
 
-    // const authAdapter = adaptersLinks
-    //   .find(adapter => adapter.label === config.authAdapterName);
-    // const authAdapterUrl = authAdapter && authAdapter.link;
-    // if (!authAdapterUrl) throw new Error(`Can't get auth adapter url`);
-
     const authAdapterUrl = context.helpers.gatewayUrl('ms-teams-oauth-adapter', context.config.accountId);
-
     const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', context.config.accountId);
     // const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', this.helpers.providersAccountId);
-
-    context.log.warn('Auth flows links', {
-      authAdapterUrl,
-      authProviderUrl
-    });
 
     const isFunction = f => typeof f === 'function';
 
@@ -53,6 +42,8 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
         headers: { 'Authorization': `FLOW ${context.config.flowToken}` }
       };
 
+      context.log.info('Start tokens update', { app, callingFlow: url });
+
       return axios(requestOptions).then(resp => {
 
         if (!resp || !resp.data) return null;
@@ -61,13 +52,13 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
           .then(updatedApp => {
             app = updatedApp;
             emitAppUpdated(updatedApp);
-            context.log.info('Application tokens updated', { app });
+            context.log.info('Tokens updated', { app });
             return updatedApp;
           });
         
         app = resp.data;
         emitAppUpdated(app);
-        context.log.info('Application tokens updated', { app });
+        context.log.info('Tokens updated', { app });
         return resp.data;
       });
     };
