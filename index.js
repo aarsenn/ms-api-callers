@@ -11,9 +11,8 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
     let app = await storage.get(config.tableName, appId);
     if (!app) throw new Error(`Can't get app on API callers init`);
 
-    const authAdapterUrl = context.helpers.gatewayUrl('ms-teams-oauth-adapter', context.config.accountId);
-    const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', context.config.accountId);
-    // const authProviderUrl = context.helpers.gatewayUrl('ms-teams-oauth-provider', this.helpers.providersAccountId);
+    const authProviderUrl = context.helpers.gatewayUrl('msteams/oauth', context.config.accountId);
+    // const authProviderUrl = context.helpers.gatewayUrl('msteams/oauth', context.helpers.providersAccountId);
 
     const isFunction = f => typeof f === 'function';
 
@@ -22,21 +21,12 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
       appUpdatedCallback(app);
     };
 
-    const updateAppRecord = data => {
-      const updated = Object.assign({}, app, data);
-      return storage.set(config.tableName, app.id, updated)
-        .then(() => updated);
-    };
-
     const checkTokens = () => {
       if (!app) return Promise.reject(new Error('No app providet in check tokens'));
       if (app.tokensExpired >= Date.now()) return Promise.resolve(app);
 
-      const isCommonApp = !app.clientSecret;
-      const url = isCommonApp ? `${authProviderUrl}?type=tokens` : authAdapterUrl;
-
       const requestOptions = {
-        url,
+        url: authProviderUrl,
         method: 'post',
         data: { app },
         headers: { 'Authorization': `FLOW ${context.config.flowToken}` }
@@ -45,17 +35,7 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
       context.log.info('Start tokens update', { app, callingFlow: url });
 
       return axios(requestOptions).then(resp => {
-
         if (!resp || !resp.data) return null;
-
-        if (isCommonApp) return updateAppRecord(resp.data)
-          .then(updatedApp => {
-            app = updatedApp;
-            emitAppUpdated(updatedApp);
-            context.log.info('Tokens updated', { app });
-            return updatedApp;
-          });
-        
         app = resp.data;
         emitAppUpdated(app);
         context.log.info('Tokens updated', { app });
