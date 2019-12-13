@@ -1,6 +1,6 @@
 {
   "name": "ms-api-callers",
-  "version": "1.2.4",
+  "version": "1.2.4-dev",
   "description": "",
   "main": "index.js",
   "scripts": {
