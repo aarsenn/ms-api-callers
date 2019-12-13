@@ -11,8 +11,7 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
     let app = await storage.get(config.tableName, appId);
     if (!app) throw new Error(`Can't get app on API callers init`);
 
-    const authProviderUrl = context.helpers.gatewayUrl('msteams/oauth', context.config.accountId);
-    // const authProviderUrl = context.helpers.gatewayUrl('msteams/oauth', context.helpers.providersAccountId);
+    const authProviderUrl = context.helpers.gatewayUrl('msteams/oauth', context.helpers.providersAccountId);
 
     const isFunction = f => typeof f === 'function';
 
