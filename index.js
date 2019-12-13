@@ -32,7 +32,7 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
         headers: { 'Authorization': `FLOW ${context.config.flowToken}` }
       };
 
-      context.log.info('Start tokens update', { app, callingFlow: url });
+      context.log.info('Start tokens update', { app, callingFlow: authProviderUrl });
 
       return axios(requestOptions).then(resp => {
         if (!resp || !resp.data) return null;
