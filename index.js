@@ -28,7 +28,7 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
       const requestOptions = {
         url: authProviderUrl,
         method: 'post',
-        data: { app, accountId: context.config.accountId },
+        data: { app },
         headers: { 'Authorization': `FLOW ${context.config.flowToken}` }
       };
 
