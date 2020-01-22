@@ -46,13 +46,6 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
       return str.replace(/v\d\.\d/, val);
     };
 
-    const wrapWithMeta = data => {
-      const { value, ...meta } = data; 
-      const val = value || data;
-      val.__proto__.meta = () => value ? meta : null
-      return val;
-    };
-
     const callGraph = opts => {
       const url = url => opts.version ? replVers(url, opts.version) : url;
       return checkTokens()
@@ -66,7 +59,7 @@ async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
           context.log.info('MS Graph http request', { request: httpOpts });
           return axios(httpOpts);
         })
-        .then(resp => wrapWithMeta(resp.data))
+        .then(resp => opts.meta ? resp.data : (resp.data.value || resp.data))
         .catch(err => {
           const requestError = () => ({ response: err.response.data, status: err.response.status });
           const error = () => ({ message: err.message || err });
