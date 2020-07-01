@@ -11,7 +11,7 @@ const CONFIG_KEY = '__config';
 const createAppIdProvider = context => ({
   get: async appId => {
     if ((appId !== APP_ID_TYPES.INHERIT_FROM_SESSION)) return appId;
-    appId = await context.get(APP_ID_SESSION_KEY);
+    appId = await context.getShared(APP_ID_SESSION_KEY);
     if (!appId) {
       throw new Error(`Can't inherit appId from session.`);
     }
@@ -21,7 +21,7 @@ const createAppIdProvider = context => ({
     if (!appId) {
       throw new Error(`Can't set ms teams app id in session.`)
     }
-    return context.set(APP_ID_SESSION_KEY, appId);
+    return context.setShared(APP_ID_SESSION_KEY, appId);
   }
 });
 
