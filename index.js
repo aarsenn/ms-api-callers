@@ -1,15 +1,45 @@
 const axios = require('axios');
 
+const APP_ID_TYPES = {
+  INHERIT_FROM_SESSION: 'inherit_from_session'
+};
+const APP_ID_SESSION_KEY = '__last_ms_teams_app_id';
+
 const CONFIG_TABLE = '__ms_teams_auth_config__';
 const CONFIG_KEY = '__config';
+
+const createAppIdProvider = context => ({
+  get: async appId => {
+    if ((appId !== APP_ID_TYPES.INHERIT_FROM_SESSION)) return appId;
+    appId = await context.get(APP_ID_SESSION_KEY);
+    if (!appId) {
+      throw new Error(`Can't inherit appId from session.`);
+    }
+    return appId;
+  },
+  set: async appId => {
+    if (!appId) {
+      throw new Error(`Can't set ms teams app id in session.`)
+    }
+    return context.set(APP_ID_SESSION_KEY, appId);
+  }
+});
 
 async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
   try {
     const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
     if (!config) throw new Error(`Can't get config on API callers init`);
 
-    let app = await storage.get(config.tableName, appId);
+    const appIdProvider = createAppIdProvider(context);
+
+    let app = await storage.get(
+      config.tableName,
+      await appIdProvider.get(appId)
+    );
+
     if (!app) throw new Error(`Can't get app on API callers init`);
+
+    await appIdProvider.set(app.id);
 
     const authProviderUrl = context.helpers.gatewayUrl('msteams/oauth', context.helpers.providersAccountId);
 
