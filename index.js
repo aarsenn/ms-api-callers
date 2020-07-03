@@ -3,18 +3,22 @@ const axios = require('axios');
 const APP_ID_TYPES = {
   INHERIT_FROM_SESSION: 'inherit_from_session'
 };
+
 const APP_ID_SESSION_KEY = '__last_ms_teams_app_id';
 
 const CONFIG_TABLE = '__ms_teams_auth_config__';
 const CONFIG_KEY = '__config';
 
-const createAppIdProvider = context => ({
+const createAppIdProvider = (context, msAuthAppSelectMethod) => ({
   get: async appId => {
-    if ((appId !== APP_ID_TYPES.INHERIT_FROM_SESSION)) return appId;
+    if (msAuthAppSelectMethod !== 'inherited') return appId;
+
     appId = await context.getShared(APP_ID_SESSION_KEY);
+
     if (!appId) {
       throw new Error(`Can't inherit appId from session.`);
     }
+
     return appId;
   },
   set: async appId => {
@@ -25,12 +29,12 @@ const createAppIdProvider = context => ({
   }
 });
 
-async function initApiCallers({ appId, storage, context, appUpdatedCallback }) {
+async function initApiCallers({ appId, msAuthAppSelectMethod, storage, context, appUpdatedCallback }) {
   try {
     const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
     if (!config) throw new Error(`Can't get config on API callers init`);
 
-    const appIdProvider = createAppIdProvider(context);
+    const appIdProvider = createAppIdProvider(context, msAuthAppSelectMethod);
 
     let app = await storage.get(
       config.tableName,
