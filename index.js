@@ -9,11 +9,11 @@ const APP_ID_SESSION_KEY = '__last_ms_teams_app_id';
 const CONFIG_TABLE = '__ms_teams_auth_config__';
 const CONFIG_KEY = '__config';
 
-const createAppIdProvider = (context, msAuthAppSelectMethod) => ({
+const createAppIdProvider = (persist, msAuthAppSelectMethod) => ({
   get: async appId => {
     if (msAuthAppSelectMethod !== 'inherited') return appId;
 
-    appId = await context.getShared(APP_ID_SESSION_KEY);
+    appId = persist && persist[APP_ID_SESSION_KEY];
 
     if (!appId) {
       throw new Error(`Can't inherit appId from session.`);
@@ -25,16 +25,17 @@ const createAppIdProvider = (context, msAuthAppSelectMethod) => ({
     if (!appId) {
       throw new Error(`Can't set ms teams app id in session.`)
     }
-    return context.setShared(APP_ID_SESSION_KEY, appId);
+    persist = persist || {};
+    return persist[APP_ID_SESSION_KEY] = appId;
   }
 });
 
-async function initApiCallers({ appId, msAuthAppSelectMethod, storage, context, appUpdatedCallback }) {
+async function initApiCallers({ appId, msAuthAppSelectMethod, storage, context, persist, appUpdatedCallback }) {
   try {
     const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
     if (!config) throw new Error(`Can't get config on API callers init`);
 
-    const appIdProvider = createAppIdProvider(context, msAuthAppSelectMethod);
+    const appIdProvider = createAppIdProvider(persist, msAuthAppSelectMethod);
 
     let app = await storage.get(
       config.tableName,
