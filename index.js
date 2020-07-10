@@ -9,11 +9,11 @@ const APP_ID_SESSION_KEY = '__last_ms_teams_app_id';
 const CONFIG_TABLE = '__ms_teams_auth_config__';
 const CONFIG_KEY = '__config';
 
-const createAppIdProvider = (persist, msAuthAppSelectMethod) => ({
+const createAppIdProvider = (context, msAuthAppSelectMethod) => ({
   get: async appId => {
     if (msAuthAppSelectMethod !== 'inherited') return appId;
 
-    appId = persist && persist[APP_ID_SESSION_KEY];
+    appId = await context.getShared(APP_ID_SESSION_KEY);
 
     if (!appId) {
       throw new Error(`Can't inherit appId from session.`);
@@ -25,17 +25,16 @@ const createAppIdProvider = (persist, msAuthAppSelectMethod) => ({
     if (!appId) {
       throw new Error(`Can't set ms teams app id in session.`)
     }
-    persist = persist || {};
-    return persist[APP_ID_SESSION_KEY] = appId;
+    return await context.setShared(APP_ID_SESSION_KEY, appId);
   }
 });
 
-async function initApiCallers({ appId, msAuthAppSelectMethod, storage, context, persist, appUpdatedCallback }) {
+async function initApiCallers({ appId, msAuthAppSelectMethod, storage, context, appUpdatedCallback }) {
   try {
     const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
     if (!config) throw new Error(`Can't get config on API callers init`);
 
-    const appIdProvider = createAppIdProvider(persist, msAuthAppSelectMethod);
+    const appIdProvider = createAppIdProvider(context, msAuthAppSelectMethod);
 
     let app = await storage.get(
       config.tableName,
@@ -44,7 +43,9 @@ async function initApiCallers({ appId, msAuthAppSelectMethod, storage, context, 
 
     if (!app) throw new Error(`Can't get app on API callers init`);
 
-    await appIdProvider.set(app.id);
+    if (context.session.get('reporting.beginningSessionId')) {
+      await appIdProvider.set(app.id);
+    }
 
     const authProviderUrl = context.helpers.gatewayUrl('msteams/oauth', context.helpers.providersAccountId);
 
@@ -125,9 +126,15 @@ async function initApiCallers({ appId, msAuthAppSelectMethod, storage, context, 
         });
     };
 
+    const saveApp = async () => {
+      const appId = app && app.id;
+      return await appIdProvider.set(appId);
+    };
+
     return {
       callGraph: opts => callGraph(isFunction(opts) ? opts(app) : opts),
       callBotframework: opts => callBotframework(isFunction(opts) ? opts(app) : opts),
+      saveApp,
       app
     }
   } catch (error) {
