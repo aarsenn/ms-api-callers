@@ -6,8 +6,19 @@ const APP_ID_TYPES = {
 
 const APP_ID_SESSION_KEY = '__last_ms_teams_app_id';
 
-const CONFIG_TABLE = '__ms_teams_auth_config__';
-const CONFIG_KEY = '__config';
+const CONFIG = {
+  eventsAdapterName: 'MS Teams Events Adapter',
+  graphAuthRequestEndpoint: 'https://login.microsoftonline.com/common/adminconsent',
+  graphAuthRequestScope: 'https://graph.microsoft.com/.default',
+  graphGetTokenEndpoint: 'https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token',
+  graphApiEndpoint: 'https://graph.microsoft.com/v1.0/',
+  botGetTokenEndpoint: 'https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token',
+  botGetTokenScope: 'https://api.botframework.com/.default',
+  botDefaultApiEndpoint: 'https://smba.trafficmanager.net/amer/',
+  tableName: '__ms_teams_auth__',
+  listKey: '__list',
+  installerBotName: 'installer:teams'
+};
 
 const createAppIdProvider = (persist, msAuthAppSelectMethod) => ({
   get: async appId => {
@@ -32,7 +43,7 @@ const createAppIdProvider = (persist, msAuthAppSelectMethod) => ({
 
 async function initApiCallers({ appId, msAuthAppSelectMethod, storage, context, persist, appUpdatedCallback }) {
   try {
-    const config = await storage.get(CONFIG_TABLE, CONFIG_KEY);
+    const config = CONFIG;
     if (!config) throw new Error(`Can't get config on API callers init`);
 
     const appIdProvider = createAppIdProvider(persist, msAuthAppSelectMethod);
